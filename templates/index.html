@@ -453,195 +453,68 @@
   </div>
 
   <div class="container">
-    <div class="step-indicator">
-      <div class="step-dot active" id="step1-dot"></div>
-      <div class="step-dot" id="step2-dot"></div>
-      <div class="step-dot" id="step3-dot"></div>
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+      <button id="connectScaleBtn" class="mdc-button mdc-button--raised">Connect Weight Machine</button>
+      <span id="scaleStatus">Disconnected</span>
     </div>
-
-    <!-- Step 1: Patient Information -->
-    <div class="step-container active" id="step1">
+    <form id="patientForm">
       <div class="card">
-        <h2>Step 1: Enter Your Information</h2>
-        <div class="patient-info">
-          <div class="mdc-text-field mdc-text-field--outlined">
-            <input type="text" class="mdc-text-field__input" id="name" required>
-            <div class="mdc-notched-outline">
-              <div class="mdc-notched-outline__leading"></div>
-              <div class="mdc-notched-outline__notch">
-                <label class="mdc-floating-label">Full Name</label>
-              </div>
-              <div class="mdc-notched-outline__trailing"></div>
-            </div>
-          </div>
-
-          <div class="mdc-text-field mdc-text-field--outlined">
-            <input type="number" class="mdc-text-field__input" id="age" required>
-            <div class="mdc-notched-outline">
-              <div class="mdc-notched-outline__leading"></div>
-              <div class="mdc-notched-outline__notch">
-                <label class="mdc-floating-label">Age</label>
-              </div>
-              <div class="mdc-notched-outline__trailing"></div>
-            </div>
-          </div>
-
-          <div class="mdc-text-field mdc-text-field--outlined">
-            <input type="text" class="mdc-text-field__input" id="gender" required>
-            <div class="mdc-notched-outline">
-              <div class="mdc-notched-outline__leading"></div>
-              <div class="mdc-notched-outline__notch">
-                <label class="mdc-floating-label">Gender</label>
-              </div>
-              <div class="mdc-notched-outline__trailing"></div>
-            </div>
-          </div>
-
-          <div class="mdc-text-field mdc-text-field--outlined">
-            <input type="number" class="mdc-text-field__input" id="height" required>
-            <div class="mdc-notched-outline">
-              <div class="mdc-notched-outline__leading"></div>
-              <div class="mdc-notched-outline__notch">
-                <label class="mdc-floating-label">Height (cm)</label>
-              </div>
-              <div class="mdc-notched-outline__trailing"></div>
-            </div>
-          </div>
-
-          <div class="mdc-text-field mdc-text-field--outlined">
-            <input type="number" class="mdc-text-field__input" id="weight" required>
-            <div class="mdc-notched-outline">
-              <div class="mdc-notched-outline__leading"></div>
-              <div class="mdc-notched-outline__notch">
-                <label class="mdc-floating-label">Weight (kg)</label>
-              </div>
-              <div class="mdc-notched-outline__trailing"></div>
-            </div>
-          </div>
-
-          <button class="mdc-button mdc-button--raised" onclick="nextStep(1)">
-            <span class="mdc-button__ripple"></span>
-            <span class="mdc-button__label">Continue to Measurements</span>
-          </button>
+        <h2>Patient Information</h2>
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="number" id="age" name="age" required>
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <input type="text" id="gender" name="gender" required>
+        </div>
+        <div class="form-group">
+          <label for="height">Height (cm)</label>
+          <input type="number" id="height" name="height" required>
+        </div>
+        <h2>Scale Measurements</h2>
+        <div class="form-group">
+          <label for="weight">Weight (kg)</label>
+          <input type="number" id="weight" name="weight" readonly>
+        </div>
+        <div class="form-group">
+          <label for="bmi">BMI</label>
+          <input type="number" id="bmi" name="bmi" readonly>
+        </div>
+        <div class="form-group">
+          <label for="body_fat">Body Fat (%)</label>
+          <input type="number" id="body_fat" name="body_fat" readonly>
+        </div>
+        <div class="form-group">
+          <label for="muscle">Muscle Mass (kg)</label>
+          <input type="number" id="muscle" name="muscle" readonly>
+        </div>
+        <div class="form-group">
+          <label for="water">Water (%)</label>
+          <input type="number" id="water" name="water" readonly>
+        </div>
+        <div class="form-group">
+          <label for="bone_mass">Bone Mass (kg)</label>
+          <input type="number" id="bone_mass" name="bone_mass" readonly>
+        </div>
+        <div class="form-group">
+          <label for="visceral_fat">Visceral Fat</label>
+          <input type="number" id="visceral_fat" name="visceral_fat" readonly>
+        </div>
+        <div class="form-group">
+          <label for="protein">Protein (%)</label>
+          <input type="number" id="protein" name="protein" readonly>
+        </div>
+        <div class="form-group">
+          <label for="bmr">BMR</label>
+          <input type="number" id="bmr" name="bmr" readonly>
         </div>
       </div>
-    </div>
-
-    <!-- Step 2: Sensor Measurements -->
-    <div class="step-container" id="step2">
-      <div class="card">
-        <h2>Step 2: Take Measurements</h2>
-        <p>Please complete each measurement one by one. Tap on each card to start the measurement.</p>
-        
-        <div class="sensor-grid">
-          <div class="card sensor-card temperature" onclick="startSensor('temp')">
-            <div class="sensor-icon temperature">
-              <i class="material-icons">thermostat</i>
-            </div>
-            <div class="sensor-label">Body Temperature</div>
-            <div class="sensor-value" id="temp">-- °C</div>
-            <div class="status-indicator success" id="temp_status">Normal</div>
-            <div class="timer" id="temp_timer">Tap to measure</div>
-          </div>
-
-          <div class="card sensor-card emg" onclick="startSensor('emg')">
-            <div class="sensor-icon emg">
-              <i class="material-icons">fitness_center</i>
-            </div>
-            <div class="sensor-label">Muscle Activity (EMG)</div>
-            <div class="sensor-value" id="emg">--</div>
-            <div class="status-indicator success" id="emg_status">Normal</div>
-            <div class="timer" id="emg_timer">Tap to start</div>
-          </div>
-
-          <div class="card sensor-card ecg" onclick="startSensor('ecg')">
-            <div class="sensor-icon ecg">
-              <i class="material-icons">favorite</i>
-            </div>
-            <div class="sensor-label">Heart Activity (ECG)</div>
-            <div class="sensor-value" id="ecg">--</div>
-            <div class="status-indicator success" id="ecg_status">Normal</div>
-            <div class="timer" id="ecg_timer">Tap to start</div>
-          </div>
-
-          <div class="card sensor-card spo2" onclick="startSensor('spo2')">
-            <div class="sensor-icon spo2">
-              <i class="material-icons">air</i>
-            </div>
-            <div class="sensor-label">Blood Oxygen (SpO₂)</div>
-            <div class="sensor-value" id="spo2">-- %</div>
-            <div class="status-indicator success" id="spo2_status">Normal</div>
-            <div class="timer" id="spo2_timer">Tap to start</div>
-          </div>
-        </div>
-
-        <div class="navigation-buttons">
-          <button class="mdc-button mdc-button--outlined" onclick="prevStep(2)">
-            <span class="mdc-button__ripple"></span>
-            <span class="mdc-button__label">Back</span>
-          </button>
-          <button class="mdc-button mdc-button--raised" onclick="nextStep(2)" id="step2-continue" disabled>
-            <span class="mdc-button__ripple"></span>
-            <span class="mdc-button__label">View Results</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 3: Results and Report -->
-    <div class="step-container" id="step3">
-      <div class="card">
-        <h2>Step 3: Your Results</h2>
-        
-        <div class="summary-card">
-          <h3>Patient Information</h3>
-          <div class="summary-value" id="summary-name"></div>
-          <div class="summary-value" id="summary-age"></div>
-          <div class="summary-value" id="summary-gender"></div>
-          <div class="summary-value" id="summary-height"></div>
-          <div class="summary-value" id="summary-weight"></div>
-        </div>
-
-        <div class="summary-card">
-          <h3>Measurements</h3>
-          <div class="summary-value">
-            Temperature: <span id="summary-temp"></span>
-            <span class="summary-status" id="summary-temp-status"></span>
-          </div>
-          <div class="summary-value">
-            EMG: <span id="summary-emg"></span>
-            <span class="summary-status" id="summary-emg-status"></span>
-          </div>
-          <div class="summary-value">
-            ECG: <span id="summary-ecg"></span>
-            <span class="summary-status" id="summary-ecg-status"></span>
-          </div>
-          <div class="summary-value">
-            SpO₂: <span id="summary-spo2"></span>
-            <span class="summary-status" id="summary-spo2-status"></span>
-          </div>
-        </div>
-
-        <div class="chart-container">
-          <canvas id="emgChart"></canvas>
-        </div>
-        <div class="chart-container">
-          <canvas id="ecgChart"></canvas>
-        </div>
-
-        <div class="navigation-buttons">
-          <button class="mdc-button mdc-button--outlined" onclick="prevStep(3)">
-            <span class="mdc-button__ripple"></span>
-            <span class="mdc-button__label">Back</span>
-          </button>
-          <button class="mdc-button mdc-button--raised" onclick="window.print()">
-            <span class="mdc-button__ripple"></span>
-            <i class="material-icons mdc-button__icon">print</i>
-            <span class="mdc-button__label">Print Report</span>
-          </button>
-        </div>
-      </div>
-    </div>
+    </form>
   </div>
 
   <div class="keyboard-container">
@@ -914,6 +787,27 @@
     document.addEventListener('DOMContentLoaded', () => {
         setupKeyboardHandling();
     });
+
+    document.getElementById('connectScaleBtn').onclick = async function() {
+      await fetch('/connect-scale', {method: 'POST'});
+      document.getElementById('scaleStatus').textContent = 'Connecting...';
+    };
+    setInterval(async () => {
+      // Update connection status
+      const statusRes = await fetch('/scale-status');
+      const {connected} = await statusRes.json();
+      document.getElementById('scaleStatus').textContent = connected ? 'Connected! Stand on the machine.' : 'Disconnected';
+      // Update scale data
+      if (connected) {
+        const dataRes = await fetch('/get-scale-data');
+        const data = await dataRes.json();
+        ["weight","bmi","body_fat","muscle","water","bone_mass","visceral_fat","protein","bmr"].forEach(key => {
+          if (document.getElementById(key)) {
+            document.getElementById(key).value = data[key] !== undefined ? data[key] : '';
+          }
+        });
+      }
+    }, 1000);
   </script>
 </body>
 </html>

@@ -120,5 +120,9 @@ def connect_scale():
 def scale_status():
     return jsonify({"connected": scale_data["is_connected"]})
 
+@app.route("/get-scale-data")
+def get_scale_data():
+    return jsonify(scale_data)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000) 
