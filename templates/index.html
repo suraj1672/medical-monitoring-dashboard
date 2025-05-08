@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Medical Monitoring Dashboard</title>
+  <!-- Material Design Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Material Design CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --mdc-theme-primary: #2B6CB0;
+      --mdc-theme-secondary: #4A5568;
+      --medical-red: #E53E3E;
+      --medical-green: #38A169;
+      --medical-purple: #6B46C1;
+      --medical-teal: #319795;
+      --card-bg: #FFFFFF;
+      --body-bg: #F7FAFC;
+      --text-primary: #2D3748;
+      --text-secondary: #4A5568;
+      --success: #38A169;
+      --warning: #DD6B20;
+      --error: #E53E3E;
+      --input-bg: #F7FAFC;
+      --input-border: #E2E8F0;
+      --input-focus: #4299E1;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--body-bg);
+      margin: 0;
+      padding: 0;
+      color: var(--text-primary);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-bar {
+      background: var(--mdc-theme-primary);
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .app-bar h1 {
+      margin: 0;
+      font-weight: 500;
+      font-size: 1.5rem;
+    }
+    .app-bar-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .app-bar-actions .mdc-button {
+      display: flex;
+      align-items: center;
+      color: white;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .app-bar-actions .mdc-button:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    .app-bar-actions .mdc-button .material-icons {
+      font-size: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 24px;
+    }
+    .sidebar {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      height: fit-content;
+    }
+    .main-content {
+      display: grid;
+      gap: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      padding: 24px;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .patient-info {
+      display: grid;
+      gap: 16px;
+    }
+    .patient-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--mdc-theme-primary);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .patient-avatar i {
+      font-size: 48px;
+      color: white;
+    }
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .sensor-card {
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .sensor-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--medical-purple);
+    }
+    .sensor-card.temperature::before { background: var(--medical-red); }
+    .sensor-card.emg::before { background: var(--medical-purple); }
+    .sensor-card.ecg::before { background: var(--medical-teal); }
+    .sensor-card.spo2::before { background: var(--medical-green); }
+    .sensor-card.weight::before { background: var(--medical-teal); }
+    .sensor-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .sensor-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .sensor-icon.temperature { background: rgba(229, 62, 62, 0.1); }
+    .sensor-icon.emg { background: rgba(107, 70, 193, 0.1); }
+    .sensor-icon.ecg { background: rgba(49, 151, 149, 0.1); }
+    .sensor-icon.spo2 { background: rgba(56, 161, 105, 0.1); }
+    .sensor-icon.weight { background: rgba(49, 151, 149, 0.1); }
+    .sensor-icon i {
+      font-size: 32px;
+    }
+    .sensor-icon.temperature i { color: var(--medical-red); }
+    .sensor-icon.emg i { color: var(--medical-purple); }
+    .sensor-icon.ecg i { color: var(--medical-teal); }
+    .sensor-icon.spo2 i { color: var(--medical-green); }
+    .sensor-icon.weight i { color: var(--medical-teal); }
+    .sensor-value {
+      font-size: 28px;
+      font-weight: 500;
+      margin: 8px 0;
+      color: var(--text-primary);
+    }
+    .sensor-label {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .chart-container {
+      height: 300px;
+      margin-top: 16px;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .status-indicator.success {
+      background: rgba(56, 161, 105, 0.1);
+      color: var(--success);
+    }
+    .status-indicator.warning {
+      background: rgba(221, 107, 32, 0.1);
+      color: var(--warning);
+    }
+    .status-indicator.error {
+      background: rgba(229, 62, 62, 0.1);
+      color: var(--error);
+    }
+    .status-indicator::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .status-indicator.success::before { background: var(--success); }
+    .status-indicator.warning::before { background: var(--warning); }
+    .status-indicator.error::before { background: var(--error); }
+    .timer {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .mdc-text-field {
+      --mdc-theme-primary: var(--mdc-theme-primary);
+      --mdc-text-field-fill-color: var(--input-bg);
+      --mdc-text-field-ink-color: var(--text-primary);
+      --mdc-text-field-label-ink-color: var(--text-secondary);
+      --mdc-text-field-outlined-idle-border-color: var(--input-border);
+      --mdc-text-field-outlined-hover-border-color: var(--input-focus);
+      --mdc-text-field-outlined-disabled-border-color: var(--input-border);
+      margin-bottom: 16px;
+    }
+    .mdc-text-field--outlined {
+      background-color: var(--input-bg);
+      border-radius: 8px;
+    }
+    .mdc-text-field--outlined .mdc-notched-outline__leading,
+    .mdc-text-field--outlined .mdc-notched-outline__notch,
+    .mdc-text-field--outlined .mdc-notched-outline__trailing {
+      border-color: var(--input-border);
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+      border-color: var(--input-border);
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-notched-outline .mdc-notched-outline__leading,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-notched-outline .mdc-notched-outline__notch,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused):hover .mdc-notched-outline .mdc-notched-outline__trailing {
+      border-color: var(--input-focus);
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__leading,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__notch,
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__trailing {
+      border-color: var(--input-focus);
+    }
+    .mdc-text-field__input {
+      color: var(--text-primary);
+      font-size: 16px;
+      padding: 12px 16px;
+    }
+    .mdc-floating-label {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+    .mdc-text-field--outlined .mdc-floating-label {
+      background-color: var(--input-bg);
+      padding: 0 4px;
+    }
+    .mdc-text-field--outlined .mdc-floating-label--float-above {
+      color: var(--mdc-theme-primary);
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-text-field__input {
+      border-color: var(--input-border);
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):hover .mdc-text-field__input {
+      border-color: var(--input-focus);
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-text-field__input {
+      border-color: var(--input-focus);
+    }
+    .mdc-text-field-helper-line {
+      padding: 0 16px;
+    }
+    .mdc-text-field-helper-text {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-text-field__input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+    .mdc-button--raised {
+      --mdc-theme-primary: var(--mdc-theme-primary);
+    }
+    @media print {
+      .app-bar, .mdc-button {
+        display: none;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        order: 2;
+      }
+      .app-bar-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .app-bar-actions .mdc-button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+    .step-container {
+      display: none;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .step-container.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .step-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--input-border);
+      transition: background-color 0.3s;
+    }
+    .step-dot.active {
+      background: var(--mdc-theme-primary);
+    }
+    .step-dot.completed {
+      background: var(--success);
+    }
+    .mdc-button {
+      min-height: 48px;
+      font-size: 16px;
+      padding: 0 24px;
+    }
+    .mdc-text-field {
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .sensor-card {
+      cursor: pointer;
+      padding: 32px;
+    }
+    .sensor-card.completed {
+      border: 2px solid var(--success);
+    }
+    .sensor-card .mdc-button {
+      width: 100%;
+      margin-top: 16px;
+    }
+    .navigation-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 16px;
+      border: 1px solid var(--input-border);
+    }
+    .summary-card h3 {
+      margin: 0 0 16px 0;
+      color: var(--text-primary);
+    }
+    .summary-value {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .summary-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+      }
+      .sensor-grid {
+        grid-template-columns: 1fr;
+      }
+      .mdc-button {
+        width: 100%;
+      }
+    }
+    /* Keyboard styles */
+    .keyboard-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--card-bg);
+        padding: 10px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .keyboard-container.visible {
+        display: block;
+    }
+    
+    .input-field-focused {
+        background-color: rgba(66, 153, 225, 0.1);
+    }
+    
+    /* Adjust main content when keyboard is visible */
+    .keyboard-visible .main-content {
+        padding-bottom: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-bar">
+    <h1>Medical Monitoring Dashboard</h1>
+    <div class="app-bar-actions">
+      <button class="mdc-button mdc-button--outlined" onclick="window.print()">
+        <span class="mdc-button__ripple"></span>
+        <i class="material-icons mdc-button__icon">print</i>
+        <span class="mdc-button__label">Print / Download Report</span>
+      </button>
+      <button class="mdc-button mdc-button--outlined">
+        <span class="mdc-button__ripple"></span>
+        <i class="material-icons mdc-button__icon">file_download</i>
+        <span class="mdc-button__label">Export Data</span>
+      </button>
+      <button class="mdc-button mdc-button--outlined">
+        <span class="mdc-button__ripple"></span>
+        <i class="material-icons mdc-button__icon">settings</i>
+        <span class="mdc-button__label">Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="step-indicator">
+      <div class="step-dot active" id="step1-dot"></div>
+      <div class="step-dot" id="step2-dot"></div>
+      <div class="step-dot" id="step3-dot"></div>
+    </div>
+
+    <!-- Step 1: Patient Information -->
+    <div class="step-container active" id="step1">
+      <div class="card">
+        <h2>Step 1: Enter Your Information</h2>
+        <div class="patient-info">
+          <div class="mdc-text-field mdc-text-field--outlined">
+            <input type="text" class="mdc-text-field__input" id="name" required>
+            <div class="mdc-notched-outline">
+              <div class="mdc-notched-outline__leading"></div>
+              <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label">Full Name</label>
+              </div>
+              <div class="mdc-notched-outline__trailing"></div>
+            </div>
+          </div>
+
+          <div class="mdc-text-field mdc-text-field--outlined">
+            <input type="number" class="mdc-text-field__input" id="age" required>
+            <div class="mdc-notched-outline">
+              <div class="mdc-notched-outline__leading"></div>
+              <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label">Age</label>
+              </div>
+              <div class="mdc-notched-outline__trailing"></div>
+            </div>
+          </div>
+
+          <div class="mdc-text-field mdc-text-field--outlined">
+            <input type="text" class="mdc-text-field__input" id="gender" required>
+            <div class="mdc-notched-outline">
+              <div class="mdc-notched-outline__leading"></div>
+              <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label">Gender</label>
+              </div>
+              <div class="mdc-notched-outline__trailing"></div>
+            </div>
+          </div>
+
+          <div class="mdc-text-field mdc-text-field--outlined">
+            <input type="number" class="mdc-text-field__input" id="height" required>
+            <div class="mdc-notched-outline">
+              <div class="mdc-notched-outline__leading"></div>
+              <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label">Height (cm)</label>
+              </div>
+              <div class="mdc-notched-outline__trailing"></div>
+            </div>
+          </div>
+
+          <div class="mdc-text-field mdc-text-field--outlined">
+            <input type="number" class="mdc-text-field__input" id="weight" required>
+            <div class="mdc-notched-outline">
+              <div class="mdc-notched-outline__leading"></div>
+              <div class="mdc-notched-outline__notch">
+                <label class="mdc-floating-label">Weight (kg)</label>
+              </div>
+              <div class="mdc-notched-outline__trailing"></div>
+            </div>
+          </div>
+
+          <button class="mdc-button mdc-button--raised" onclick="nextStep(1)">
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label">Continue to Measurements</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Sensor Measurements -->
+    <div class="step-container" id="step2">
+      <div class="card">
+        <h2>Step 2: Take Measurements</h2>
+        <p>Please complete each measurement one by one. Tap on each card to start the measurement.</p>
+        
+        <div class="sensor-grid">
+          <div class="card sensor-card temperature" onclick="startSensor('temp')">
+            <div class="sensor-icon temperature">
+              <i class="material-icons">thermostat</i>
+            </div>
+            <div class="sensor-label">Body Temperature</div>
+            <div class="sensor-value" id="temp">-- °C</div>
+            <div class="status-indicator success" id="temp_status">Normal</div>
+            <div class="timer" id="temp_timer">Tap to measure</div>
+          </div>
+
+          <div class="card sensor-card emg" onclick="startSensor('emg')">
+            <div class="sensor-icon emg">
+              <i class="material-icons">fitness_center</i>
+            </div>
+            <div class="sensor-label">Muscle Activity (EMG)</div>
+            <div class="sensor-value" id="emg">--</div>
+            <div class="status-indicator success" id="emg_status">Normal</div>
+            <div class="timer" id="emg_timer">Tap to start</div>
+          </div>
+
+          <div class="card sensor-card ecg" onclick="startSensor('ecg')">
+            <div class="sensor-icon ecg">
+              <i class="material-icons">favorite</i>
+            </div>
+            <div class="sensor-label">Heart Activity (ECG)</div>
+            <div class="sensor-value" id="ecg">--</div>
+            <div class="status-indicator success" id="ecg_status">Normal</div>
+            <div class="timer" id="ecg_timer">Tap to start</div>
+          </div>
+
+          <div class="card sensor-card spo2" onclick="startSensor('spo2')">
+            <div class="sensor-icon spo2">
+              <i class="material-icons">air</i>
+            </div>
+            <div class="sensor-label">Blood Oxygen (SpO₂)</div>
+            <div class="sensor-value" id="spo2">-- %</div>
+            <div class="status-indicator success" id="spo2_status">Normal</div>
+            <div class="timer" id="spo2_timer">Tap to start</div>
+          </div>
+        </div>
+
+        <div class="navigation-buttons">
+          <button class="mdc-button mdc-button--outlined" onclick="prevStep(2)">
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label">Back</span>
+          </button>
+          <button class="mdc-button mdc-button--raised" onclick="nextStep(2)" id="step2-continue" disabled>
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label">View Results</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Results and Report -->
+    <div class="step-container" id="step3">
+      <div class="card">
+        <h2>Step 3: Your Results</h2>
+        
+        <div class="summary-card">
+          <h3>Patient Information</h3>
+          <div class="summary-value" id="summary-name"></div>
+          <div class="summary-value" id="summary-age"></div>
+          <div class="summary-value" id="summary-gender"></div>
+          <div class="summary-value" id="summary-height"></div>
+          <div class="summary-value" id="summary-weight"></div>
+        </div>
+
+        <div class="summary-card">
+          <h3>Measurements</h3>
+          <div class="summary-value">
+            Temperature: <span id="summary-temp"></span>
+            <span class="summary-status" id="summary-temp-status"></span>
+          </div>
+          <div class="summary-value">
+            EMG: <span id="summary-emg"></span>
+            <span class="summary-status" id="summary-emg-status"></span>
+          </div>
+          <div class="summary-value">
+            ECG: <span id="summary-ecg"></span>
+            <span class="summary-status" id="summary-ecg-status"></span>
+          </div>
+          <div class="summary-value">
+            SpO₂: <span id="summary-spo2"></span>
+            <span class="summary-status" id="summary-spo2-status"></span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="emgChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="ecgChart"></canvas>
+        </div>
+
+        <div class="navigation-buttons">
+          <button class="mdc-button mdc-button--outlined" onclick="prevStep(3)">
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label">Back</span>
+          </button>
+          <button class="mdc-button mdc-button--raised" onclick="window.print()">
+            <span class="mdc-button__ripple"></span>
+            <i class="material-icons mdc-button__icon">print</i>
+            <span class="mdc-button__label">Print Report</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="keyboard-container">
+    <!-- Keyboard content will be dynamically added here -->
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/material-components-web@14.0.0/dist/material-components-web.min.js"></script>
+  <script>
+    // Initialize Material Design components
+    document.querySelectorAll('.mdc-text-field').forEach(textField => {
+      const mdcTextField = mdc.textField.MDCTextField.attachTo(textField);
+      // Add focus effect
+      textField.addEventListener('focus', () => {
+        textField.classList.add('mdc-text-field--focused');
+      });
+      textField.addEventListener('blur', () => {
+        if (!textField.querySelector('.mdc-text-field__input').value) {
+          textField.classList.remove('mdc-text-field--focused');
+        }
+      });
+    });
+    document.querySelectorAll('.mdc-button').forEach(button => {
+      mdc.ripple.MDCRipple.attachTo(button);
+    });
+
+    let emgData = [], ecgData = [], emgChart, ecgChart;
+    let completedSensors = new Set();
+
+    function nextStep(currentStep) {
+      if (currentStep === 1) {
+        // Validate all fields are filled
+        const requiredFields = ['name', 'age', 'gender', 'height', 'weight'];
+        const allFilled = requiredFields.every(field => 
+          document.getElementById(field).value.trim() !== ''
+        );
+        
+        if (!allFilled) {
+          alert('Please fill in all fields');
+          return;
+        }
+      }
+      
+      if (currentStep === 2 && completedSensors.size < 4) {
+        alert('Please complete all measurements');
+        return;
+      }
+
+      document.querySelector(`#step${currentStep}`).classList.remove('active');
+      document.querySelector(`#step${currentStep + 1}`).classList.add('active');
+      document.querySelector(`#step${currentStep}-dot`).classList.remove('active');
+      document.querySelector(`#step${currentStep}-dot`).classList.add('completed');
+      document.querySelector(`#step${currentStep + 1}-dot`).classList.add('active');
+
+      if (currentStep === 2) {
+        updateSummary();
+      }
+    }
+
+    function prevStep(currentStep) {
+      document.querySelector(`#step${currentStep}`).classList.remove('active');
+      document.querySelector(`#step${currentStep - 1}`).classList.add('active');
+      document.querySelector(`#step${currentStep}-dot`).classList.remove('active');
+      document.querySelector(`#step${currentStep - 1}-dot`).classList.add('active');
+      document.querySelector(`#step${currentStep - 1}-dot`).classList.remove('completed');
+    }
+
+    function startSensor(sensor) {
+      const card = document.querySelector(`.sensor-card.${sensor}`);
+      if (card.classList.contains('completed')) return;
+
+      fetch(`/start_${sensor}`, { method: 'POST' });
+      const timerEl = document.getElementById(`${sensor}_timer`);
+      
+      if (sensor === 'temp') {
+        timerEl.textContent = 'Measuring...';
+        setTimeout(() => {
+          completedSensors.add(sensor);
+          card.classList.add('completed');
+          timerEl.textContent = 'Completed';
+          checkAllSensorsComplete();
+        }, 3000);
+      } else {
+        let timeLeft = 15;
+        timerEl.textContent = `${timeLeft} sec`;
+        
+        const timerId = setInterval(() => {
+          timeLeft--;
+          if (timeLeft <= 0) {
+            clearInterval(timerId);
+            completedSensors.add(sensor);
+            card.classList.add('completed');
+            timerEl.textContent = 'Completed';
+            checkAllSensorsComplete();
+          } else {
+            timerEl.textContent = `${timeLeft} sec`;
+          }
+        }, 1000);
+      }
+    }
+
+    function checkAllSensorsComplete() {
+      if (completedSensors.size === 4) {
+        document.getElementById('step2-continue').disabled = false;
+      }
+    }
+
+    function updateSummary() {
+      // Update patient info
+      document.getElementById('summary-name').textContent = `Name: ${document.getElementById('name').value}`;
+      document.getElementById('summary-age').textContent = `Age: ${document.getElementById('age').value}`;
+      document.getElementById('summary-gender').textContent = `Gender: ${document.getElementById('gender').value}`;
+      document.getElementById('summary-height').textContent = `Height: ${document.getElementById('height').value} cm`;
+      document.getElementById('summary-weight').textContent = `Weight: ${document.getElementById('weight').value} kg`;
+
+      // Update measurements
+      const sensors = ['temp', 'emg', 'ecg', 'spo2'];
+      sensors.forEach(sensor => {
+        const value = document.getElementById(sensor).textContent;
+        const status = document.getElementById(`${sensor}_status`);
+        document.getElementById(`summary-${sensor}`).textContent = value;
+        document.getElementById(`summary-${sensor}-status`).textContent = status.textContent;
+        document.getElementById(`summary-${sensor}-status`).className = `summary-status ${status.className.split(' ')[1]}`;
+      });
+    }
+
+    function setStatusIndicator(sensor, value) {
+      let status = 'Normal', cls = 'success';
+      if (sensor === 'temp') {
+        if (value < 36) { status = 'Low'; cls = 'warning'; }
+        else if (value > 37.5) { status = 'High'; cls = 'error'; }
+      } else if (sensor === 'emg') {
+        if (value < 100) { status = 'Low'; cls = 'warning'; }
+        else if (value > 300) { status = 'High'; cls = 'error'; }
+      } else if (sensor === 'ecg') {
+        if (value < 60) { status = 'Low'; cls = 'warning'; }
+        else if (value > 100) { status = 'High'; cls = 'error'; }
+      } else if (sensor === 'spo2') {
+        if (value < 90) { status = 'Low'; cls = 'error'; }
+        else if (value > 100) { status = 'High'; cls = 'warning'; }
+      }
+      const el = document.getElementById(sensor + '_status');
+      if (el) {
+        el.textContent = status;
+        el.className = 'status-indicator ' + cls;
+      }
+    }
+
+    function updateGraphs() {
+      fetch('/get_data')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("temp").innerText = data.temp + " °C";
+          document.getElementById("emg").innerText = data.emg;
+          document.getElementById("ecg").innerText = data.ecg;
+          document.getElementById("spo2").innerText = data.spo2 + " %";
+          setStatusIndicator('temp', parseFloat(data.temp));
+          setStatusIndicator('emg', parseFloat(data.emg));
+          setStatusIndicator('ecg', parseFloat(data.ecg));
+          setStatusIndicator('spo2', parseFloat(data.spo2));
+          emgData = data.emgGraph || [];
+          ecgData = data.ecgGraph || [];
+          if (emgChart) emgChart.data.datasets[0].data = emgData;
+          if (ecgChart) ecgChart.data.datasets[0].data = ecgData;
+          if (emgChart) emgChart.update();
+          if (ecgChart) ecgChart.update();
+        });
+    }
+
+    setInterval(updateGraphs, 1000);
+
+    const ctx1 = document.getElementById('emgChart').getContext('2d');
+    emgChart = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: Array(100).fill(""),
+        datasets: [{
+          label: "EMG Signal",
+          borderColor: 'var(--medical-purple)',
+          backgroundColor: 'rgba(107, 70, 193, 0.1)',
+          borderWidth: 2,
+          pointRadius: 0,
+          data: []
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: 'var(--text-secondary)' }
+          }
+        }
+      }
+    });
+
+    const ctx2 = document.getElementById('ecgChart').getContext('2d');
+    ecgChart = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: Array(100).fill(""),
+        datasets: [{
+          label: "ECG Signal",
+          borderColor: 'var(--medical-teal)',
+          backgroundColor: 'rgba(49, 151, 149, 0.1)',
+          borderWidth: 2,
+          pointRadius: 0,
+          data: []
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: 'rgba(0,0,0,0.05)' },
+            ticks: { color: 'var(--text-secondary)' }
+          }
+        }
+      }
+    });
+
+    // Keyboard handling
+    function setupKeyboardHandling() {
+        const inputFields = document.querySelectorAll('.mdc-text-field__input');
+        const keyboardContainer = document.createElement('div');
+        keyboardContainer.className = 'keyboard-container';
+        document.body.appendChild(keyboardContainer);
+        
+        inputFields.forEach(field => {
+            field.addEventListener('focus', () => {
+                // Show keyboard container
+                keyboardContainer.classList.add('visible');
+                document.body.classList.add('keyboard-visible');
+                
+                // Add visual feedback
+                field.closest('.mdc-text-field').classList.add('input-field-focused');
+                
+                // Ensure the input is visible
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+            
+            field.addEventListener('blur', () => {
+                // Hide keyboard container
+                keyboardContainer.classList.remove('visible');
+                document.body.classList.remove('keyboard-visible');
+                
+                // Remove visual feedback
+                field.closest('.mdc-text-field').classList.remove('input-field-focused');
+            });
+        });
+        
+        // Handle keyboard input
+        document.addEventListener('keydown', (e) => {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.classList.contains('mdc-text-field__input')) {
+                // Handle special keys
+                if (e.key === 'Enter') {
+                    activeElement.blur();
+                }
+            }
+        });
+    }
+    
+    // Initialize keyboard handling when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setupKeyboardHandling();
+    });
+  </script>
+</body>
+</html>

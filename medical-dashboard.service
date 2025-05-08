@@ -1,0 +1,16 @@
+[Unit]
+Description=Medical Dashboard Web Application
+After=network.target graphical.target
+
+[Service]
+Type=simple
+User=legion
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/legion/.Xauthority
+WorkingDirectory=/home/legion/CH341SER/Test
+ExecStart=/bin/bash /home/legion/CH341SER/Test/start_medical_dashboard.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target 

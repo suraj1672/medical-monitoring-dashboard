@@ -1,0 +1,6 @@
+@xset s off
+@xset -dpms
+@xset s noblank
+
+# Start the medical dashboard
+@/home/legion/CH341SER/Test/start_medical_dashboard.sh 
