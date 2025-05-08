@@ -31,26 +31,54 @@ scale_data = {
     "age": "--",
     "gender": "--",
     "height": "--",
-    "is_connected": False
+    "is_connected": False,
+    "device_name": "--"
 }
 
-async def connect_to_scale():
+# Store selected device address
+selected_scale_address = {"address": None}
+
+@app.route("/scan-ble-devices")
+def scan_ble_devices():
+    devices = asyncio.run(BleakScanner.discover(timeout=5.0))
+    device_list = [
+        {"name": d.name or "Unknown", "address": d.address}
+        for d in devices if d.name
+    ]
+    return jsonify(device_list)
+
+@app.route("/connect-scale-device", methods=["POST"])
+def connect_scale_device():
+    data = request.get_json()
+    address = data.get("address")
+    if not address:
+        return jsonify({"success": False, "error": "No address provided"}), 400
+    selected_scale_address["address"] = address
+    threading.Thread(target=run_scale_reader, daemon=True).start()
+    return jsonify({"success": True})
+
+def run_scale_reader():
+    asyncio.run(connect_to_scale(selected_scale_address["address"]))
+
+async def connect_to_scale(address):
     while True:
         try:
-            # Scan for the BeatXP scale
-            devices = await BleakScanner.discover()
-            for device in devices:
-                if "BeatXP" in device.name:
-                    async with BleakClient(device.address) as client:
-                        print(f"Connected to {device.name}")
-                        scale_data["is_connected"] = True
-                        # Subscribe to notifications
-                        await client.start_notify(BEATXP_CHARACTERISTIC_UUID, handle_scale_data)
-                        while True:
-                            await asyncio.sleep(1)
+            async with BleakClient(address) as client:
+                device_name = address
+                try:
+                    device_name = (await client.get_services()).services[0].description or address
+                except:
+                    pass
+                print(f"Connected to {device_name}")
+                scale_data["is_connected"] = True
+                scale_data["device_name"] = device_name
+                await client.start_notify(BEATXP_CHARACTERISTIC_UUID, handle_scale_data)
+                while True:
+                    await asyncio.sleep(1)
         except Exception as e:
             print(f"Error connecting to scale: {e}")
             scale_data["is_connected"] = False
+            scale_data["device_name"] = "--"
             await asyncio.sleep(5)
 
 def handle_scale_data(sender, data):
@@ -107,14 +135,6 @@ def report():
             data = json.load(f)
         return render_template("report.html", data=data)
     return "No report available."
-
-@app.route("/connect-scale", methods=["POST"])
-def connect_scale():
-    def run_scale_reader():
-        asyncio.run(connect_to_scale())
-    
-    threading.Thread(target=run_scale_reader, daemon=True).start()
-    return jsonify(success=True)
 
 @app.route("/scale-status")
 def scale_status():
